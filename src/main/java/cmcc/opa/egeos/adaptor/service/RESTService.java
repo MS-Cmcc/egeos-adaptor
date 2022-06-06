@@ -50,10 +50,10 @@ public class RESTService {
 		String eventId = jsonObject.get("acquisitionId").toString();
 		int oilSpillSImulationId = Utils.fromEgeosShapefileToOilSpillSimulationRequest(eventId);
 		
-		return Response.ok("OK", MediaType.APPLICATION_JSON).build();
+		//return Response.ok("OK", MediaType.APPLICATION_JSON).build();
 
-		// SimulationRequest sr = new SimulationRequest(oilSpillSImulationId);
-		// return Response.ok(sr, MediaType.APPLICATION_JSON).build();
+		SimulationRequest sr = new SimulationRequest(oilSpillSImulationId);
+		return Response.ok(sr, MediaType.APPLICATION_JSON).build();
 		
 	}
 	
@@ -217,70 +217,6 @@ public class RESTService {
 		        JSONArray jsonArray = new JSONArray();
 		        String wmsUrl = wmsURL.replace("GetCapabilities", "GetMap");
 
-				System.out.println();
-				System.out.println("--------------checking if some layers are already pushed -------------");
-				System.out.println();
-
-				//String event = Utils.getJSON("https://www.eos-viewer.com/api/okeanos/" + correlationId,  Utils.getLoginSession());
-				String event = Utils.getJSON("https://www.eos-viewer.com/api/okeanos/" + correlationId);
-
-				JsonElement root = new JsonParser().parse(event.substring(1, event.length() - 2));
-
-				if (!root.getAsJsonObject().get("drifting_model").isJsonNull()){
-					JsonElement drifting_model = new JsonParser().parse(root.getAsJsonObject().get("drifting_model").toString());
-					JsonElement json_data = new JsonParser().parse(drifting_model.getAsJsonObject().get("json_data").toString());
-					JsonElement wmss = new JsonParser().parse(json_data.getAsJsonObject().get("wmss").toString());
-					
-					int existingLayers = 0; 
-					JsonArray jsArray = wmss.getAsJsonArray();
-					existingLayers = jsArray.size();
-
-					if (existingLayers == 2){
-						
-						JsonElement layerName = new JsonParser().parse(jsArray.get(0).getAsJsonObject().get("layer").toString());
-						String lName = layerName.toString().replace("\"", "");
-						if (!lName.equals(totalOilLayer) && !lName.equals(beachedLayer)) {
-
-							System.out.println("!!! adding existing layers to our result !!!");
-							JsonElement firstLayer = jsArray.get(0);
-							JsonElement secondLayer = jsArray.get(1);
-
-							JsonElement layerName1 = new JsonParser().parse(firstLayer.getAsJsonObject().get("layer").toString());
-							JsonElement layerName2 = new JsonParser().parse(secondLayer.getAsJsonObject().get("layer").toString());
-
-							JsonElement wmsDescription1 = new JsonParser().parse(firstLayer.getAsJsonObject().get("wmsDescription").toString());
-							JsonElement wmsDescription2 = new JsonParser().parse(secondLayer.getAsJsonObject().get("wmsDescription").toString());
-
-							JsonElement wmsUrl1 = new JsonParser().parse(firstLayer.getAsJsonObject().get("wmsUrl").toString());
-							JsonElement wmsUrl2 = new JsonParser().parse(secondLayer.getAsJsonObject().get("wmsUrl").toString());
-							
-							JSONObject newResponseJson = new JSONObject();
-							newResponseJson.put("layer", layerName1.toString().replace("\"", ""));
-							newResponseJson.put("wmsUrl", wmsUrl1.toString().replace("\"", ""));
-							newResponseJson.put("wmsDescription", wmsDescription1.toString().replace("\"", ""));
-							newResponseJson.put("wmsDates", oilConcentrationDates);
-							
-							JSONObject newResponseJson2 = new JSONObject();
-							newResponseJson2.put("layer", layerName2.toString().replace("\"", ""));
-							newResponseJson2.put("wmsUrl", wmsUrl2.toString().replace("\"", ""));
-							newResponseJson2.put("wmsDescription", wmsDescription2.toString().replace("\"", ""));
-							newResponseJson2.put("wmsDates", oilConcentrationDates);
-
-							jsonArray.put(newResponseJson);
-							jsonArray.put(newResponseJson2);
-							
-						} else {
-							System.out.println("The existing layers and the new one are the same");
-							System.out.println("So we proceed with overwriting");
-						}
-					}
-					System.out.println();
-
-				} else {
-					System.out.println("--------------NO layers are previously pushed -------------");
-					System.out.println();
-				}				
-
 				System.out.println("totalOilLayer  -> " +totalOilLayer);
 				System.out.println("totalOilLayer ISO  -> " +totalOilLayer.concat("-Isolines"));
 		        jsonArray.put(creatingJson(oilConcentrationDates,  totalOilLayer, "Modeled concentration of oil found at the sea surface in tons/km2", wmsUrl));
@@ -323,12 +259,12 @@ public class RESTService {
 		System.out.println("simulationResponseJson tostring -? " + simulationResponseJson.toString());
 
 		//		String returningURL = "https://www.eos-viewer.com/api/analyst/post/drifting/"+simulationId;
-		String returningURL = "https://www.eos-viewer.com/api/analyst/post/drifting";
-		System.out.println();
-		System.out.println("returningURL-> " + returningURL);
+		// String returningURL = "https://www.eos-viewer.com/api/analyst/post/drifting";
+		// System.out.println();
+		// System.out.println("returningURL-> " + returningURL);
 		
-		Utils.sendingResponseToEgeos(returningURL, simulationResponseJson.toString());
-		//System.out.println("WARNING!!! I AM NOT SENDING RESPONSE MESSAGE ---!!!");
+		//Utils.sendingResponseToEgeos(returningURL, simulationResponseJson.toString());
+		System.out.println("WARNING!!! I AM NOT SENDING RESPONSE MESSAGE ---!!!");
 		return Response.ok("ok", MediaType.APPLICATION_JSON).build();
 		
 	}

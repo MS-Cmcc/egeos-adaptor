@@ -20,6 +20,7 @@ import java.util.Set;
 import com.google.gson.Gson;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -57,15 +58,19 @@ public class Utils {
 
 		Feature feature = egeosEvent.getFeatures().get(notNullGeometryIndex);
 		
-		String simName = feature.getId();
+		String simName = feature.getId().replace(".", "_");
 		System.out.println();
 		System.out.println("simName -> " + simName);
 		System.out.println();
 
 		// 2020-02-25T00:41:00+01:00
 		// WARNING !!! FORCING TO IGNORE +02 TIMEZONE INFO
-		DateTime dt = new DateTime(feature.getProperties().getDateTime());
-		String year = String.format("%02d", dt.getYearOfCentury());
+
+		DateTime dt = new DateTime(feature.getProperties().getDateTime()).toDateTime(DateTimeZone.UTC);
+
+		System.out.println("WARNING: forcing to year 2022!!!");
+		//String year = String.format("%02d", dt.getYearOfCentury());
+		String year = String.format("%02d", 22);
 		String month = String.format("%02d", dt.getMonthOfYear());
 		String day = String.format("%02d", dt.getDayOfMonth());
 		String hour = String.format("%02d", dt.getHourOfDay());
@@ -118,7 +123,7 @@ public class Utils {
 		lonMinutes = String.valueOf(decimalFormat.format(decimalPartOfStartLon * 60));
 
 		String model = "", simLength = "", spillRate = "", var_02 = "", var_03 = "", var_10 = "", var_14 = "";
-		String correlationId = simName, serviceId = "okeanos.orbitaleos", requestDss = "oilspill_op";
+		String correlationId = simName, serviceId = "egeos.orbitaleos", requestDss = "oilspill_op";
 		int plotStep = 1; // 24
 
 		Properties prop = new Properties();
@@ -195,7 +200,7 @@ public class Utils {
 		System.out.println();
 		
 		int simId = -1;
-		//simId = sendingToSsa(serviceId, correlationId, requestDss, requestPayload);
+		simId = sendingToSsa(serviceId, correlationId, requestDss, requestPayload);
 
         System.out.println();
 		System.out.println("SimID: -----> " + simId);
