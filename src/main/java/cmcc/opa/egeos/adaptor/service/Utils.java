@@ -39,7 +39,7 @@ public class Utils {
 		//String session = getLoginSession();
 		//String event = getJSON("https://www.eos-viewer.com/api/okeanos/" + eventId, session);
 
-		String event = getJSON("https://ov-matteo.cmcc-opa.eu/backend/egeos/?uniqueId=" + eventId);
+		String event = getJSON("https://ws.cmcc-opa.eu/egeos-ws/?uniqueId=" + eventId);
 
 		// EgeosEvent egeosEvent = new Gson().fromJson(event.substring(1, event.length() - 2),
 		// EgeosEvent.class);
@@ -58,10 +58,12 @@ public class Utils {
 
 		Feature feature = egeosEvent.getFeatures().get(notNullGeometryIndex);
 		
-		String simName = feature.getId().replace(".", "_");
-		System.out.println();
-		System.out.println("simName -> " + simName);
-		System.out.println();
+		String simName = feature.getId().replace(".", "_").replace("-", "_");
+		// System.out.println();
+		// System.out.println("Forcing sim name to egeosSIMULATION !!!");
+		//simName = "egeosSIMULATION";
+		// System.out.println("simName -> " + simName);
+		// System.out.println();
 
 		// 2020-02-25T00:41:00+01:00
 		// WARNING !!! FORCING TO IGNORE +02 TIMEZONE INFO
@@ -157,7 +159,10 @@ public class Utils {
 					    System.out.println();
 			}
 
-			
+			// System.out.println();
+			// System.out.println("Warning! forced to GOFS!!! ");
+			// model = "GOFS";
+			// System.out.println();
 			simLength = prop.getProperty("sim_length");
 			
 			spillRate = String.valueOf(decimalFormat.format(Double.valueOf(prop.getProperty("spillrate_coeff"))*minVolume));
