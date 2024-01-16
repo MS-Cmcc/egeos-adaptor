@@ -42,12 +42,11 @@ public class RESTService {
 	public Response creatingOilSpillSimulationRequest(String message) throws JSONException, UnsupportedEncodingException, IOException {
 		System.out.println("received message ----------------------------> " + message);
 
-		JSONObject jsonObject = new JSONObject(message);
-		String eventId = jsonObject.get("acquisitionId").toString();
-		int oilSpillSImulationId = Utils.fromEgeosShapefileToOilSpillSimulationRequest(eventId);
+		//JSONObject jsonObject = new JSONObject(message);
+		//String eventId = jsonObject.get("acquisitionId").toString();
+		//int oilSpillSImulationId = Utils.fromEgeosShapefileToOilSpillSimulationRequest(eventId);
+		int oilSpillSImulationId = Utils.fromEgeosShapefileToOilSpillSimulationRequest(message);
 		
-		//return Response.ok("OK", MediaType.APPLICATION_JSON).build();
-
 		SimulationRequest sr = new SimulationRequest(oilSpillSImulationId);
 		return Response.ok(sr, MediaType.APPLICATION_JSON).build();
 		

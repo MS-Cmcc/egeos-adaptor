@@ -32,14 +32,14 @@ public class Utils {
 
 	}
 
-	public static int fromEgeosShapefileToOilSpillSimulationRequest(String eventId)
+	public static int fromEgeosShapefileToOilSpillSimulationRequest(String event)
 			throws JSONException, UnsupportedEncodingException, IOException {
 
 		// no session required for first version
 		//String session = getLoginSession();
 		//String event = getJSON("https://www.eos-viewer.com/api/okeanos/" + eventId, session);
 
-		String event = getJSON("https://ws.cmcc-opa.eu/egeos-ws/?uniqueId=" + eventId);
+		//String event = getJSON("https://ws.cmcc-opa.eu/egeos-ws/?uniqueId=" + eventId);
 
 		// EgeosEvent egeosEvent = new Gson().fromJson(event.substring(1, event.length() - 2),
 		// EgeosEvent.class);
@@ -70,9 +70,7 @@ public class Utils {
 
 		DateTime dt = new DateTime(feature.getProperties().getDateTime()).toDateTime(DateTimeZone.UTC);
 
-		System.out.println("WARNING: forcing to year 2022!!!");
-		//String year = String.format("%02d", dt.getYearOfCentury());
-		String year = String.format("%02d", 22);
+		String year = String.format("%02d", dt.getYearOfCentury());
 		String month = String.format("%02d", dt.getMonthOfYear());
 		String day = String.format("%02d", dt.getDayOfMonth());
 		String hour = String.format("%02d", dt.getHourOfDay());
@@ -173,7 +171,7 @@ public class Utils {
 			var_10 = prop.getProperty("var_10");
 
 			// forcing GOFS instead GLOB
-			if (model.equals("GLOB")) model = "GOFS";
+			//if (model.equals("GLOB")) model = "GOFS";
 			
 			if (model.equals("GLOB") || model.equals("GOFS")) var_10 = "10.0";
 			else if (model.equals("MED") || model.equals("BLACKSEA")) var_10 = "2.0";
@@ -181,8 +179,6 @@ public class Utils {
 
 			var_14 = prop.getProperty("var_14");
 			plotStep = Integer.valueOf(prop.getProperty("plotstep"));
-
-			System.out.println("var_10/Horizontal diffusivity : "+ var_10);
 
 		} catch (IOException ex) {
 			System.out.println("Exception reading prop file -> " + ex.getMessage());
@@ -205,7 +201,7 @@ public class Utils {
 		System.out.println();
 		
 		int simId = -1;
-		simId = sendingToSsa(serviceId, correlationId, requestDss, requestPayload);
+		// simId = sendingToSsa(serviceId, correlationId, requestDss, requestPayload);
 
         System.out.println();
 		System.out.println("SimID: -----> " + simId);
