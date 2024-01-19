@@ -40,7 +40,7 @@ public class RESTService {
 	@Produces("application/json")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response creatingOilSpillSimulationRequest(String message) throws JSONException, UnsupportedEncodingException, IOException {
-		System.out.println("received message ----------------------------> " + message);
+		System.out.println("you have received a new e-geos simulation request ---------------------------- ");
 
 		//JSONObject jsonObject = new JSONObject(message);
 		//String eventId = jsonObject.get("acquisitionId").toString();
@@ -91,16 +91,16 @@ public class RESTService {
 		System.out.println("wmsURL: " + wmsURL );
 		
 		// creating response ...
-		ArrayList<String> oilConcentrationDates = new ArrayList<String>();
-		ArrayList<String> beachedOilDates = new ArrayList<String>();
-		ArrayList<String> tempeartureDates = new ArrayList<String>();
-		ArrayList<String> waveHeightDates = new ArrayList<String>();
-		ArrayList<String> wavePeriodDates = new ArrayList<String>();
-		ArrayList<String> waveDirectionsDates = new ArrayList<String>();
-		ArrayList<String> currentsDates = new ArrayList<String>();
-		ArrayList<String> currentsDirectionDates = new ArrayList<String>();
-		ArrayList<String> windDates = new ArrayList<String>();
-		ArrayList<String> windDirectionsDates = new ArrayList<String>();
+		String oilConcentrationDates = "";
+		String beachedOilDates = "";
+		// ArrayList<String> tempeartureDates = new ArrayList<String>();
+		// ArrayList<String> waveHeightDates = new ArrayList<String>();
+		// ArrayList<String> wavePeriodDates = new ArrayList<String>();
+		// ArrayList<String> waveDirectionsDates = new ArrayList<String>();
+		// ArrayList<String> currentsDates = new ArrayList<String>();
+		// ArrayList<String> currentsDirectionDates = new ArrayList<String>();
+		// ArrayList<String> windDates = new ArrayList<String>();
+		// ArrayList<String> windDirectionsDates = new ArrayList<String>();
 		JSONObject simulationResponseJson = new JSONObject();
 		
 		try {
@@ -127,12 +127,12 @@ public class RESTService {
 		        
 		        // String totalOilLayer = "mdslk_totaloil_", beachedLayer = "mdslk_beached_", 
 				String totalOilLayer = "Witoil-Total-Oil", beachedLayer = "Witoil-Beached";
-				String isolinesLayer = totalOilLayer.concat("-Isolines"); 
+				// String isolinesLayer = totalOilLayer.concat("-Isolines"); 
 
 				if (correlationId.contains("_thick")){
 					totalOilLayer = totalOilLayer.concat("-Thick");
 					beachedLayer = beachedLayer.concat("-Thick");
-					isolinesLayer = isolinesLayer.concat("-Thick");
+					// isolinesLayer = isolinesLayer.concat("-Thick");
 					correlationId = correlationId.replace("_thick", "");
 				}
 
@@ -163,35 +163,37 @@ public class RESTService {
 							String dateRange = eElement.getElementsByTagName("Dimension").item(0).getTextContent();
 							System.out.println("wms layers dateRange -----> " +  dateRange );
 
-							// 2022-01-18T15:00:00Z/2022-01-20T14:00:00Z/PT1H
-							String[] dateRangeParts = dateRange.split("/");
+							oilConcentrationDates = dateRange;
+							beachedOilDates = dateRange;
+
+							// String[] dateRangeParts = dateRange.split("/");
 							
-							if (dateRangeParts.length > 2){
-								String dateFromString = dateRangeParts[0];
-								String dateToString = dateRangeParts[1];
+							// if (dateRangeParts.length > 2){
+							// 	String dateFromString = dateRangeParts[0];
+							// 	String dateToString = dateRangeParts[1];
 
-								SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-								Date startDate = formatter.parse(dateFromString.replace("T", " ").replace("Z", ""));
-								Date endDate = formatter.parse(dateToString.replace("T", " ").replace("Z", ""));
+							// 	SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+							// 	Date startDate = formatter.parse(dateFromString.replace("T", " ").replace("Z", ""));
+							// 	Date endDate = formatter.parse(dateToString.replace("T", " ").replace("Z", ""));
 								
-								Calendar start = Calendar.getInstance();
-								start.setTime(startDate);
+							// 	Calendar start = Calendar.getInstance();
+							// 	start.setTime(startDate);
 								
-								Calendar end = Calendar.getInstance();
-								end.setTime(endDate);
-								// adding one hour in order to inclue the last step
-								end.add(Calendar.HOUR_OF_DAY, 1);
+							// 	Calendar end = Calendar.getInstance();
+							// 	end.setTime(endDate);
+							// 	// adding one hour in order to inclue the last step
+							// 	end.add(Calendar.HOUR_OF_DAY, 1);
 								
-								for (Date date = start.getTime(); start.before(end); start.add(Calendar.HOUR, 1), date = start.getTime()) {
-									// Do your job here with `date`.
-									DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");  
-                					String dateToPush = dateFormat.format(date);  
+							// 	for (Date date = start.getTime(); start.before(end); start.add(Calendar.HOUR, 1), date = start.getTime()) {
+							// 		// Do your job here with `date`.
+							// 		DateFormat dateFormat = new SimpleDateFormat("yyyy-dd-MM HH:mm");   //2023-07-11T08:00:00Z
+                			// 		String dateToPush = dateFormat.format(date);  
 									
-									oilConcentrationDates.add(dateToPush);
-									beachedOilDates.add(dateToPush);
-								}
+							// 		oilConcentrationDates.add(dateToPush);
+							// 		beachedOilDates.add(dateToPush);
+							// 	}
 
-							}
+							// }
 						
 						}
 		                // else if (eElement.getElementsByTagName("Name").item(0).getTextContent().contains(beachedLayer)) beachedOilDates.add(eElement.getElementsByTagName("Name").item(0).getTextContent());
@@ -213,10 +215,10 @@ public class RESTService {
 		        String wmsUrl = wmsURL.replace("GetCapabilities", "GetMap");
 
 				System.out.println("totalOilLayer  -> " +totalOilLayer);
-				System.out.println("totalOilLayer ISO  -> " +totalOilLayer.concat("-Isolines"));
+				// System.out.println("totalOilLayer ISO  -> " +totalOilLayer.concat("-Isolines"));
 		        jsonArray.put(creatingJson(oilConcentrationDates,  totalOilLayer, "Modeled concentration of oil found at the sea surface in tons/km2", wmsUrl));
 		        jsonArray.put(creatingJson(beachedOilDates,  beachedLayer, "Modeled concentration of oil found permanently or temporarily attached to the coast in tons of oil per km of impacted coastline", wmsUrl));
-				jsonArray.put(creatingJson(oilConcentrationDates,  isolinesLayer, "Isolines for modeled concentration of oil found permanently or temporarily attached to the coast in tons of oil per km of impacted coastline", wmsUrl));
+				// jsonArray.put(creatingJson(oilConcentrationDates,  isolinesLayer, "Isolines for modeled concentration of oil found permanently or temporarily attached to the coast in tons of oil per km of impacted coastline", wmsUrl));
 				// jsonArray.put(creatingJson(currentsDates,  currLayer, "Movement of water from one location to another measured in meters per second (m/s). Ocean currents are usually generated by tidal changes, winds and variations in salinity and temperature. ", wmsUrl));
 		        // jsonArray.put(creatingJson(currentsDirectionDates,  currDirectionLayer, "Direction of the water motion in degrees referenced to the geographic North", wmsURL.replace("GetCapabilities", "GetMap")));
 		        // jsonArray.put(creatingJson(windDirectionsDates, windDirectionLayer, "direction from which the wind blows (in degrees) referenced to the North (0 degrees) and increasing clockwise", wmsUrl));
@@ -264,20 +266,14 @@ public class RESTService {
 		
 	}
 
-	private JSONObject creatingJson(ArrayList<String> datesList, String layerDescription, String descriptionLayer, String wmsUrlResponse) {
+	private JSONObject creatingJson(String dimenstionTimeTag, String layerDescription, String descriptionLayer, String wmsUrlResponse) {
 		
         JSONObject totalOilResponseJson = new JSONObject();
         totalOilResponseJson.put("layer", layerDescription);
-        totalOilResponseJson.put("wmsUrl", wmsUrlResponse);
-        totalOilResponseJson.put("wmsDescription", descriptionLayer);
-        
-        // JSONArray wmsDatesArray = new JSONArray();
-        
-        // for (String s: datesList) {
-        // 	String tmp = s.replace(layerDescription, "");
-        // 	wmsDatesArray.put(tmp.substring(6,8) + "-" + tmp.substring(4,6) + "-" + tmp.substring(0,4) + " " + tmp.substring(9,11) + ":00");
-        // }
-        totalOilResponseJson.put("wmsDates", datesList);
+        totalOilResponseJson.put("wms_url", wmsUrlResponse);
+        totalOilResponseJson.put("wms_description", descriptionLayer);
+
+        totalOilResponseJson.put("time_range", dimenstionTimeTag);
         
         // JSONArray wmsArray = new JSONArray();
 		// wmsArray.put(wmsDatesArray);

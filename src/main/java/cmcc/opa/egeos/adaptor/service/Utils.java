@@ -10,6 +10,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -35,15 +36,6 @@ public class Utils {
 	public static int fromEgeosShapefileToOilSpillSimulationRequest(String event)
 			throws JSONException, UnsupportedEncodingException, IOException {
 
-		// no session required for first version
-		//String session = getLoginSession();
-		//String event = getJSON("https://www.eos-viewer.com/api/okeanos/" + eventId, session);
-
-		//String event = getJSON("https://ws.cmcc-opa.eu/egeos-ws/?uniqueId=" + eventId);
-
-		// EgeosEvent egeosEvent = new Gson().fromJson(event.substring(1, event.length() - 2),
-		// EgeosEvent.class);
-
 		EgeosEvent egeosEvent = new Gson().fromJson(event, EgeosEvent.class);
 
 		// preparing payload
@@ -52,34 +44,25 @@ public class Utils {
 		int notNullGeometryIndex = 0;
 
 		for (int i=0; i<egeosEvent.getTotalFeatures(); i++){
-			System.out.println("egeosEvent.getFeatures() -> " + egeosEvent.getFeatures());
 			if(egeosEvent.getFeatures().get(i).getGeometry() != null) notNullGeometryIndex = i;
 		}
 
 		Feature feature = egeosEvent.getFeatures().get(notNullGeometryIndex);
 		
-		String simName = feature.getId().replace(".", "_").replace("-", "_");
-		// System.out.println();
-		// System.out.println("Forcing sim name to egeosSIMULATION !!!");
-		//simName = "egeosSIMULATION";
-		// System.out.println("simName -> " + simName);
-		// System.out.println();
-
-		// 2020-02-25T00:41:00+01:00
-		// WARNING !!! FORCING TO IGNORE +02 TIMEZONE INFO
+		String simName = "00000000-0000-AAA-BB-C-00-DD_" + feature.getId().replace(".", "_").replace("-", "_");
 
 		DateTime dt = new DateTime(feature.getProperties().getDateTime()).toDateTime(DateTimeZone.UTC);
-
+		// using current DateTime in case of TEST simulation
+		if (simName.contains("***TEST***")) dt = new DateTime(new Date()).toDateTime(DateTimeZone.UTC);
+		
 		String year = String.format("%02d", dt.getYearOfCentury());
 		String month = String.format("%02d", dt.getMonthOfYear());
 		String day = String.format("%02d", dt.getDayOfMonth());
 		String hour = String.format("%02d", dt.getHourOfDay());
 		String minutes = String.format("%02d", dt.getMinuteOfHour());
 		String startLat = "", startLon = "";
-		double minVolume = 1.0;
-
-		//minVolume = egeosEvent.getMinVolume();
-		minVolume = 1.522;
+		Double areaKm = 1.0;
+		areaKm = feature.getProperties().getArea_km();
 
 		String subStringWithBbox = "";
 		int coordinatesNumberOfEvent = feature.getGeometry().getCoordinates().size();
@@ -123,7 +106,7 @@ public class Utils {
 		lonMinutes = String.valueOf(decimalFormat.format(decimalPartOfStartLon * 60));
 
 		String model = "", simLength = "", spillRate = "", var_02 = "", var_03 = "", var_10 = "", var_14 = "";
-		String correlationId = simName, serviceId = "egeos.orbitaleos", requestDss = "oilspill_op";
+		String correlationId = simName, serviceId = "egeos", requestDss = "oilspill_op";
 		int plotStep = 1; // 24
 
 		Properties prop = new Properties();
@@ -157,13 +140,9 @@ public class Utils {
 					    System.out.println();
 			}
 
-			// System.out.println();
-			// System.out.println("Warning! forced to GOFS!!! ");
-			// model = "GOFS";
-			// System.out.println();
 			simLength = prop.getProperty("sim_length");
 			
-			spillRate = String.valueOf(decimalFormat.format(Double.valueOf(prop.getProperty("spillrate_coeff"))*minVolume));
+			spillRate = String.valueOf(decimalFormat.format(Double.valueOf(prop.getProperty("spillrate_coeff"))*areaKm));
 			
 			// spillRate = "5.0";
 			var_02 = prop.getProperty("var_02");
@@ -184,7 +163,7 @@ public class Utils {
 			System.out.println("Exception reading prop file -> " + ex.getMessage());
 		}
 
-		String requestPayload = "{\"sim_name\":\"" + simName + "\",\"notes\":\"\",\"start_lat\":\"" + startLat
+		String requestPayload = "{\"sim_name\":\"" + simName + "\",\"notes\":\""+ areaKm +"\",\"start_lat\":\"" + startLat
 				+ "\",\"start_lon\":\"" + startLon + "\",\"model\":\"" + model
 				+ "\",\"wind\":\"ECMWF025\",\"sim_length\":\"" + simLength + "\",\"day\":\"" + day + "\",\"month\":\""
 				+ month + "\",\"year\":\"" + year + "\"," + "\"hour\":\"" + hour + "\",\"minutes\":\"" + minutes
@@ -201,7 +180,7 @@ public class Utils {
 		System.out.println();
 		
 		int simId = -1;
-		// simId = sendingToSsa(serviceId, correlationId, requestDss, requestPayload);
+		simId = sendingToSsa(serviceId, correlationId, requestDss, requestPayload);
 
         System.out.println();
 		System.out.println("SimID: -----> " + simId);
@@ -219,8 +198,7 @@ public class Utils {
 
 		JSONObject jsonObj = new JSONObject(sendingRequest(url, fullContent, null, service));
 		int simulationId = -1;
-		if (jsonObj.has("simulation_id")) simulationId = jsonObj.getInt("simulation_id");
-		System.out.println("simulation_id-> " + simulationId);
+		if (jsonObj.has("simulation_id")) simulationId = Integer.parseInt(jsonObj.get("simulation_id").toString().replace("99999", ""));
 		return simulationId;
 	}
 

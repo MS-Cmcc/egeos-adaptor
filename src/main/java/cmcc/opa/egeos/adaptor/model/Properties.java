@@ -1,7 +1,6 @@
 package cmcc.opa.egeos.adaptor.model;
 
 import java.util.Date;
-import com.google.gson.annotations.SerializedName;
 
 public class Properties{
     public int id;
@@ -19,8 +18,7 @@ public class Properties{
     public double min_lon;
     public double baric_lon;
     public String alarm_lev;
-    @SerializedName("date-time") 
-    public Date dateTime;
+    public Date datetime;
     public String name;
 
     public int getId() {
@@ -144,11 +142,11 @@ public class Properties{
     }
 
     public Date getDateTime() {
-        return this.dateTime;
+        return this.datetime;
     }
 
     public void setDateTime(Date dateTime) {
-        this.dateTime = dateTime;
+        this.datetime = dateTime;
     }
 
     public String getName() {
