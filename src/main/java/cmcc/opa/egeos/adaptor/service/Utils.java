@@ -49,7 +49,7 @@ public class Utils {
 
 		Feature feature = egeosEvent.getFeatures().get(notNullGeometryIndex);
 		
-		String simName = "00000000-0000-AAA-BB-C-00-DD_" + feature.getId().replace(".", "_").replace("-", "_");
+		String simName = feature.getId().replace(".", "_").replace("-", "_");
 
 		DateTime dt = new DateTime(feature.getProperties().getDateTime()).toDateTime(DateTimeZone.UTC);
 		// using current DateTime in case of TEST simulation
@@ -116,42 +116,15 @@ public class Utils {
 			prop.load(Utils.class.getResourceAsStream("/config.properties"));
 
 			model = prop.getProperty("model");
-			URL url = new URL ("http://localhost:8080/utils/rest/gethighestresolutionmodel/lat="+doubleStartLat+ "&lon="+doubleStartLon+ "");
-			//URL url = new URL ("http://172.16.20.2:8080/utils/rest/gethighestresolutionmodel/lat="+doubleStartLat+ "&lon="+doubleStartLon+ "");
-			HttpURLConnection con = (HttpURLConnection)url.openConnection();
-			con.setRequestMethod("GET");
-			//con.setRequestProperty("Content-Type", "application/json; utf-8");
-			con.setRequestProperty("Accept", "application/json");
-			con.setDoOutput(true);
-
-			try(BufferedReader br = new BufferedReader(
-					  new InputStreamReader(con.getInputStream(), "utf-8"))) {
-					    StringBuilder response = new StringBuilder();
-					    String responseLine = null;
-					    while ((responseLine = br.readLine()) != null) {
-					        response.append(responseLine.trim());
-					    }
-					    System.out.println();
-					    //System.out.println("model ----> " + response.toString());
-					    JSONObject jsonObject = new JSONObject(response.toString());
-					    String modelFromWebService = jsonObject.getString("model");
-					    System.out.println("modelFromWebService -> " + modelFromWebService);
-					    model = modelFromWebService;
-					    System.out.println();
-			}
-
+			
 			simLength = prop.getProperty("sim_length");
 			
 			spillRate = String.valueOf(decimalFormat.format(Double.valueOf(prop.getProperty("spillrate_coeff"))*areaKm));
 			
-			// spillRate = "5.0";
 			var_02 = prop.getProperty("var_02");
 			var_03 = prop.getProperty("var_03");
 			var_10 = prop.getProperty("var_10");
 
-			// forcing GOFS instead GLOB
-			//if (model.equals("GLOB")) model = "GOFS";
-			
 			if (model.equals("GLOB") || model.equals("GOFS")) var_10 = "10.0";
 			else if (model.equals("MED") || model.equals("BLACKSEA")) var_10 = "2.0";
 			else if (model.equals("SANIFS") || model.equals("DUBAI")) var_10 = "0.4";
@@ -206,11 +179,6 @@ public class Utils {
 			throws UnsupportedEncodingException, IOException {
 
 		String responseFromHttpRequest = "";
-//		System.out.println();
-//		System.out.println("fullContent--- " + content);
-//		System.out.println("urlString--- " + urlString);
-//
-//		System.out.println();
 
 		URL url = new URL(urlString);
 
@@ -336,7 +304,7 @@ public class Utils {
 			c.setRequestProperty("Content-length", "0");
 			c.setUseCaches(false);
 			c.setAllowUserInteraction(false);
-			//c.setRequestProperty("Cookie", cookie);
+			//c.setRequestProperty("Cookie", "cookie");
 			c.setRequestProperty("Accept", "application/json");
 			c.connect();
 			int status = c.getResponseCode();

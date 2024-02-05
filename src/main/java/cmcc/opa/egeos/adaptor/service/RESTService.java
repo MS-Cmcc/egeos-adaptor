@@ -47,7 +47,7 @@ public class RESTService {
 		//int oilSpillSImulationId = Utils.fromEgeosShapefileToOilSpillSimulationRequest(eventId);
 		int oilSpillSImulationId = Utils.fromEgeosShapefileToOilSpillSimulationRequest(message);
 		
-		SimulationRequest sr = new SimulationRequest(oilSpillSImulationId);
+		SimulationRequest sr = new SimulationRequest(oilSpillSImulationId, 0);
 		return Response.ok(sr, MediaType.APPLICATION_JSON).build();
 		
 	}
@@ -69,20 +69,12 @@ public class RESTService {
 		String correlationId = jsonObject.get("correlationId").toString() ; // correlationId: 56cf6e61-bceb-4d65-9a65-6c6068aad456
 		String dss = jsonObject.get("dss").toString() ; // dss: sar_op oilspill_op
 
-		String dssPath = "WITOIL";
-		
-		// String wmsURL = "https://wms-dev.cmcc-opa.eu/cache/mapsrvn8?map=/var/www/html/cache/DSS/";
-		// //String wmsURL = "http://193.204.199.193/cache/mapsrvn8?map=/var/www/html/cache/DSS/";
-		// wmsURL = wmsURL.concat(dssPath).concat("/simulations/").concat(simulationId).concat("/").concat(simulationId)
-		// 			.concat(".map&REQUEST=GetCapabilities&service=WMS");
-
-		String wmsURL = "https://ov-prod.cmcc-opa.eu/cgi-bin/mapserv?map=witoil_";
-		//String wmsURL = "http://193.204.199.193/cache/mapsrvn8?map=/var/www/html/cache/DSS/";
-		wmsURL = wmsURL.concat(simulationId).concat("&REQUEST=GetCapabilities&service=WMS");
-
-		// https://ov-prod.cmcc-opa.eu/cgi-bin/mapserv?map=witoil_999994309&REQUEST=GetMap&service=WMS
-		// https://wms-dev.cmcc-opa.eu/cache/mapsrvn8?map=/var/www/html/cache/DSS/WITOIL/simulations/999992759/999992759.map&REQUEST=GetMap&service=WMS
-			
+		String ovEnv = "prod";
+		String baseEnv = "https://ov-"+ovEnv+".cmcc-opa.eu";
+		String wmsURL = baseEnv + "/cgi-bin/mapserv?map=witoil_";
+		if (ovEnv != ("prod")) wmsURL = baseEnv + "/cgi-bin/mapserv?map=/srv/ov/backend/support/witoil/simulations/mapfiles/"+simulationId+"/witoil_"+simulationId+".map&REQUEST=GetCapabilities&service=WMS";
+		else wmsURL = wmsURL.concat(simulationId).concat("&REQUEST=GetCapabilities&service=WMS");
+	
 		System.out.println("simulationId: " + simulationId);
 		System.out.println("status: " + status );
 		System.out.println("serviceId: " + serviceId);
@@ -93,14 +85,7 @@ public class RESTService {
 		// creating response ...
 		String oilConcentrationDates = "";
 		String beachedOilDates = "";
-		// ArrayList<String> tempeartureDates = new ArrayList<String>();
-		// ArrayList<String> waveHeightDates = new ArrayList<String>();
-		// ArrayList<String> wavePeriodDates = new ArrayList<String>();
-		// ArrayList<String> waveDirectionsDates = new ArrayList<String>();
-		// ArrayList<String> currentsDates = new ArrayList<String>();
-		// ArrayList<String> currentsDirectionDates = new ArrayList<String>();
-		// ArrayList<String> windDates = new ArrayList<String>();
-		// ArrayList<String> windDirectionsDates = new ArrayList<String>();
+
 		JSONObject simulationResponseJson = new JSONObject();
 		
 		try {
@@ -135,12 +120,6 @@ public class RESTService {
 					// isolinesLayer = isolinesLayer.concat("-Thick");
 					correlationId = correlationId.replace("_thick", "");
 				}
-
-				String sstLayer = "sst_", vhmLayer = "vhm0_";
-		        String vtzaLayer = "vtza_", vdirLayer = "vdir_", currLayer = "curr_", currDirectionLayer = "curr-direction_";
-		        String windLayer = "wind_", windDirectionLayer = "wind-direction_";
-
-				
 		        
 		        if (errNodes.getLength() >= 2) {
 		        
@@ -165,85 +144,51 @@ public class RESTService {
 
 							oilConcentrationDates = dateRange;
 							beachedOilDates = dateRange;
-
-							// String[] dateRangeParts = dateRange.split("/");
-							
-							// if (dateRangeParts.length > 2){
-							// 	String dateFromString = dateRangeParts[0];
-							// 	String dateToString = dateRangeParts[1];
-
-							// 	SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-							// 	Date startDate = formatter.parse(dateFromString.replace("T", " ").replace("Z", ""));
-							// 	Date endDate = formatter.parse(dateToString.replace("T", " ").replace("Z", ""));
-								
-							// 	Calendar start = Calendar.getInstance();
-							// 	start.setTime(startDate);
-								
-							// 	Calendar end = Calendar.getInstance();
-							// 	end.setTime(endDate);
-							// 	// adding one hour in order to inclue the last step
-							// 	end.add(Calendar.HOUR_OF_DAY, 1);
-								
-							// 	for (Date date = start.getTime(); start.before(end); start.add(Calendar.HOUR, 1), date = start.getTime()) {
-							// 		// Do your job here with `date`.
-							// 		DateFormat dateFormat = new SimpleDateFormat("yyyy-dd-MM HH:mm");   //2023-07-11T08:00:00Z
-                			// 		String dateToPush = dateFormat.format(date);  
-									
-							// 		oilConcentrationDates.add(dateToPush);
-							// 		beachedOilDates.add(dateToPush);
-							// 	}
-
-							// }
-						
+					
 						}
-		                // else if (eElement.getElementsByTagName("Name").item(0).getTextContent().contains(beachedLayer)) beachedOilDates.add(eElement.getElementsByTagName("Name").item(0).getTextContent());
-		                // else if (eElement.getElementsByTagName("Name").item(0).getTextContent().contains(sstLayer)) tempeartureDates.add(eElement.getElementsByTagName("Name").item(0).getTextContent());
-		                // else if (eElement.getElementsByTagName("Name").item(0).getTextContent().contains(vhmLayer)) waveHeightDates.add(eElement.getElementsByTagName("Name").item(0).getTextContent());
-		                // else if (eElement.getElementsByTagName("Name").item(0).getTextContent().contains(vtzaLayer)) wavePeriodDates.add(eElement.getElementsByTagName("Name").item(0).getTextContent());
-		                // else if (eElement.getElementsByTagName("Name").item(0).getTextContent().contains(vdirLayer)) waveDirectionsDates.add(eElement.getElementsByTagName("Name").item(0).getTextContent());
-		                // else if (eElement.getElementsByTagName("Name").item(0).getTextContent().contains(currLayer)) currentsDates.add(eElement.getElementsByTagName("Name").item(0).getTextContent());
-		                // else if (eElement.getElementsByTagName("Name").item(0).getTextContent().contains(currDirectionLayer)) currentsDirectionDates.add(eElement.getElementsByTagName("Name").item(0).getTextContent());
-		                // else if (eElement.getElementsByTagName("Name").item(0).getTextContent().contains(windLayer)) windDates.add(eElement.getElementsByTagName("Name").item(0).getTextContent());
-		                // else if (eElement.getElementsByTagName("Name").item(0).getTextContent().contains(windDirectionLayer)) windDirectionsDates.add(eElement.getElementsByTagName("Name").item(0).getTextContent());
-		                
 		            }
 		        }
 		        
-		        simulationResponseJson.put("acquisitionId", correlationId);
+		        simulationResponseJson.put("acquisition_id", correlationId);
 		        simulationResponseJson.put("status", "SUCCEED");
+				simulationResponseJson.put("processing_code", 1);
+				simulationResponseJson.put("netcdf_repository", baseEnv+"/backend/support/witoil/simulations/mapfiles/"+simulationId+"/"+simulationId+".tgz");
 		        JSONArray jsonArray = new JSONArray();
 		        String wmsUrl = wmsURL.replace("GetCapabilities", "GetMap");
 
 				System.out.println("totalOilLayer  -> " +totalOilLayer);
-				// System.out.println("totalOilLayer ISO  -> " +totalOilLayer.concat("-Isolines"));
-		        jsonArray.put(creatingJson(oilConcentrationDates,  totalOilLayer, "Modeled concentration of oil found at the sea surface in tons/km2", wmsUrl));
+				jsonArray.put(creatingJson(oilConcentrationDates,  totalOilLayer, "Modeled concentration of oil found at the sea surface in tons/km2", wmsUrl));
 		        jsonArray.put(creatingJson(beachedOilDates,  beachedLayer, "Modeled concentration of oil found permanently or temporarily attached to the coast in tons of oil per km of impacted coastline", wmsUrl));
-				// jsonArray.put(creatingJson(oilConcentrationDates,  isolinesLayer, "Isolines for modeled concentration of oil found permanently or temporarily attached to the coast in tons of oil per km of impacted coastline", wmsUrl));
-				// jsonArray.put(creatingJson(currentsDates,  currLayer, "Movement of water from one location to another measured in meters per second (m/s). Ocean currents are usually generated by tidal changes, winds and variations in salinity and temperature. ", wmsUrl));
-		        // jsonArray.put(creatingJson(currentsDirectionDates,  currDirectionLayer, "Direction of the water motion in degrees referenced to the geographic North", wmsURL.replace("GetCapabilities", "GetMap")));
-		        // jsonArray.put(creatingJson(windDirectionsDates, windDirectionLayer, "direction from which the wind blows (in degrees) referenced to the North (0 degrees) and increasing clockwise", wmsUrl));
-		        // jsonArray.put(creatingJson(windDates, windLayer, "wind speed is the rate (in meters per second) at which air moves from high to low pressure areas. Wind speed values are typically obtained at (or extrapolated to) 10m above the sea level", wmsUrl));
-		        simulationResponseJson.put("wmss", jsonArray);
+				simulationResponseJson.put("wmss", jsonArray);
 
+				// including ossi.json
 
-//		        System.out.println(tempeartureDates );
-//		        System.out.println(waveHeightDates );
-//		        System.out.println(wavePeriodDates );
-//				System.out.println(waveDirectionsDates);
-//				System.out.println(currentsDates );
-//				System.out.println(currentsDirectionDates );
-//				System.out.println(windDates );
-//				System.out.println(windDirectionsDates );
-				
-				
+				JSONObject ossiJsonObject = new JSONObject();
+				try {
+					System.out.println("... retreiving REPORT from: "
+							+ baseEnv+"/backend/support/witoil/simulations/mapfiles/" + simulationId + "/ossi.json");
+							ossiJsonObject = new JSONObject(
+							Utils.getJSON(baseEnv+"/backend/support/witoil/simulations/mapfiles/" + simulationId + "/ossi.json"));
+				} catch (Exception e) {
+					// Block of code to handle errors
+					System.out.println("... ossi does not exist! " + e);
+				}
+				System.out.println("... ossi --> " + ossiJsonObject);
+				simulationResponseJson.put("oilspill_impact", ossiJsonObject);
+
+				// done
 				
 		        }else {
-		        	simulationResponseJson.put("acquisitionId", correlationId);
-		        	System.out.println("NO RESULT ------>>>> ");
-		        	simulationResponseJson.put("status", "FAILED/OOD");
+					// in case of failed simulation
+		        	simulationResponseJson.put("acquisition_id", correlationId);
+		        	System.out.println("NO RESULT DUE TO A FAILED SIMULATION ");
+		        	simulationResponseJson.put("status", "FAILED");
 			        JSONArray jsonArray = new JSONArray();
-			        jsonArray.put(creatingJson(oilConcentrationDates,  "_", "mdslk totaloil description", ""));
+			        //jsonArray.put(creatingJson(oilConcentrationDates,  "_", "mdslk totaloil description", ""));
 			        simulationResponseJson.put("wmss", jsonArray);
+					simulationResponseJson.put("processing_code", -1);
+					simulationResponseJson.put("netcdf_repository", "N.A.");
+					simulationResponseJson.put("oilspill_impact", "N.A.");
 		     //   	{"status":"FAILED/OOD","wmss":[{"wmsDescription":"WMS Description OilSpill","wmsUrl":"","wmsDates":[],"layer":"OilSpill"},{"wmsDescription":"WMS Description Currents","wmsUrl":"","wmsDates":[],"layer":"Currents"}]}		        	
 		        }
 		        

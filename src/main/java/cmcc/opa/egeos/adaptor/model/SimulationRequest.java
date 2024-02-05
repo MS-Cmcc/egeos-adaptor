@@ -6,11 +6,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class SimulationRequest {
 	public SimulationRequest() {     }
 
-	public SimulationRequest( int processing_id) {
+	public SimulationRequest( int processing_id, int processing_code) {
 		this.processing_id = processing_id;
+		this.processing_code = processing_code;
 	}
 
 	private int processing_id;
+	private int processing_code;
 
 	public int getProcessing_id() {
 		return processing_id;
@@ -18,5 +20,13 @@ public class SimulationRequest {
 
 	public void setProcessing_id(int processing_id) {
 		this.processing_id = processing_id;
+	}
+
+	public int getProcessing_code() {
+		return processing_code;
+	}
+
+	public void setProcessing_code(int processing_code) {
+		this.processing_code = processing_code;
 	}
 }
