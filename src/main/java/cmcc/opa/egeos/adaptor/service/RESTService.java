@@ -164,17 +164,23 @@ public class RESTService {
 				// including ossi.json
 
 				JSONObject ossiJsonObject = new JSONObject();
+				JSONObject reportJsonObject = new JSONObject();
+
 				try {
 					System.out.println("... retreiving REPORT from: "
 							+ baseEnv+"/backend/support/witoil/simulations/mapfiles/" + simulationId + "/ossi.json");
 							ossiJsonObject = new JSONObject(
 							Utils.getJSON(baseEnv+"/backend/support/witoil/simulations/mapfiles/" + simulationId + "/ossi.json"));
+							reportJsonObject = new JSONObject(
+							Utils.getJSON(baseEnv+"/backend/support/witoil/simulations/mapfiles/" + simulationId + "/report/report.json"));
 				} catch (Exception e) {
 					// Block of code to handle errors
 					System.out.println("... ossi does not exist! " + e);
 				}
 				System.out.println("... ossi --> " + ossiJsonObject);
 				simulationResponseJson.put("oilspill_impact", ossiJsonObject);
+				System.out.println("... report --> " + reportJsonObject);
+				simulationResponseJson.put("report", reportJsonObject);
 
 				// done
 				
@@ -189,6 +195,7 @@ public class RESTService {
 					simulationResponseJson.put("processing_code", -1);
 					simulationResponseJson.put("netcdf_repository", "N.A.");
 					simulationResponseJson.put("oilspill_impact", "N.A.");
+					simulationResponseJson.put("report", "N.A.");
 		     //   	{"status":"FAILED/OOD","wmss":[{"wmsDescription":"WMS Description OilSpill","wmsUrl":"","wmsDates":[],"layer":"OilSpill"},{"wmsDescription":"WMS Description Currents","wmsUrl":"","wmsDates":[],"layer":"Currents"}]}		        	
 		        }
 		        
