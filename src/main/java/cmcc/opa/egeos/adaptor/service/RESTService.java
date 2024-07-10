@@ -12,6 +12,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -35,6 +37,26 @@ import cmcc.opa.egeos.adaptor.model.SimulationRequest;
 @Path("/services")
 public class RESTService {
 	
+	@POST
+	@Path("login-test")
+	@Produces("application/json")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response testingLoginResponse() throws JSONException, UnsupportedEncodingException, IOException {
+		System.out.println("you have received a new e-geos TEST ---------------------------- ");
+
+		Utils.getLoginSession();
+
+		//JSONObject jsonObject = new JSONObject(message);
+		//String eventId = jsonObject.get("acquisitionId").toString();
+		//int oilSpillSImulationId = Utils.fromEgeosShapefileToOilSpillSimulationRequest(eventId);
+		// int oilSpillSImulationId = Utils.fromEgeosShapefileToOilSpillSimulationRequest(message);
+		
+		// SimulationRequest sr = new SimulationRequest(oilSpillSImulationId, 0);
+		// return Response.ok(sr, MediaType.APPLICATION_JSON).build();
+		return Response.ok("ok", MediaType.APPLICATION_JSON).build();
+		
+	}
+
 	@POST
 	@Path("create-simulation")
 	@Produces("application/json")
@@ -67,6 +89,19 @@ public class RESTService {
 		String status = jsonObject.get("status").toString() ; // status: C
 		String serviceId = jsonObject.get("serviceId").toString() ; // serviceId: legacysystem.test1.pullrequest
 		String correlationId = jsonObject.get("correlationId").toString() ; // correlationId: 56cf6e61-bceb-4d65-9a65-6c6068aad456
+		String username = ""; 
+		String tenantId = "";
+		String[] correlationIdParts = correlationId.split("&username"); // sat_oil_poly.2***TEST***&username=cmcc&tenantId=qwerty12345qwerty
+		
+		if (correlationIdParts.length == 2){
+			String[] tenantIdAndUsername = getUsernameAndTenantId(correlationId); 
+			if (tenantIdAndUsername != null && tenantIdAndUsername.length >= 2) {
+				username = tenantIdAndUsername[0];
+				tenantId = tenantIdAndUsername[1];
+			}
+		}
+		
+		correlationId = correlationIdParts[0]; // 004
 		String dss = jsonObject.get("dss").toString() ; // dss: sar_op oilspill_op
 
 		String ovEnv = "prod";
@@ -76,6 +111,8 @@ public class RESTService {
 		else wmsURL = wmsURL.concat(simulationId).concat("&REQUEST=GetCapabilities&service=WMS");
 	
 		System.out.println("simulationId: " + simulationId);
+		System.out.println("username: " + username );
+		System.out.println("tenantId: " + tenantId );
 		System.out.println("status: " + status );
 		System.out.println("serviceId: " + serviceId);
 		System.out.println("correlationId: " + correlationId );
@@ -114,12 +151,13 @@ public class RESTService {
 				String totalOilLayer = "Witoil-Total-Oil", beachedLayer = "Witoil-Beached";
 				// String isolinesLayer = totalOilLayer.concat("-Isolines"); 
 
-				if (correlationId.contains("_thick")){
-					totalOilLayer = totalOilLayer.concat("-Thick");
-					beachedLayer = beachedLayer.concat("-Thick");
-					// isolinesLayer = isolinesLayer.concat("-Thick");
-					correlationId = correlationId.replace("_thick", "");
-				}
+				// N THICK Polygon
+				// if (correlationId.contains("_thick")){
+				// 	totalOilLayer = totalOilLayer.concat("-Thick");
+				// 	beachedLayer = beachedLayer.concat("-Thick");
+				// 	// isolinesLayer = isolinesLayer.concat("-Thick");
+				// 	correlationId = correlationId.replace("_thick", "");
+				// }
 		        
 		        if (errNodes.getLength() >= 2) {
 		        
@@ -154,11 +192,11 @@ public class RESTService {
 				simulationResponseJson.put("processing_code", 1);
 				simulationResponseJson.put("netcdf_repository", baseEnv+"/backend/support/witoil/simulations/mapfiles/"+simulationId+"/"+simulationId+".tgz");
 		        JSONArray jsonArray = new JSONArray();
-		        String wmsUrl = wmsURL.replace("GetCapabilities", "GetMap");
+		        //String wmsUrl = wmsURL.replace("GetCapabilities", "GetMap");
 
 				System.out.println("totalOilLayer  -> " +totalOilLayer);
-				jsonArray.put(creatingJson(oilConcentrationDates,  totalOilLayer, "Modeled concentration of oil found at the sea surface in tons/km2", wmsUrl));
-		        jsonArray.put(creatingJson(beachedOilDates,  beachedLayer, "Modeled concentration of oil found permanently or temporarily attached to the coast in tons of oil per km of impacted coastline", wmsUrl));
+				jsonArray.put(creatingJson(oilConcentrationDates,  totalOilLayer, "Modeled concentration of oil found at the sea surface in tons/km2", wmsURL));
+		        jsonArray.put(creatingJson(beachedOilDates,  beachedLayer, "Modeled concentration of oil found permanently or temporarily attached to the coast in tons of oil per km of impacted coastline", wmsURL));
 				simulationResponseJson.put("wmss", jsonArray);
 
 				// including ossi.json
@@ -212,8 +250,8 @@ public class RESTService {
 		// System.out.println();
 		// System.out.println("returningURL-> " + returningURL);
 		
-		//Utils.sendingResponseToEgeos(returningURL, simulationResponseJson.toString());
-		System.out.println("WARNING!!! I AM NOT SENDING RESPONSE MESSAGE ---!!!");
+		Utils.sendingResponseToEgeos(simulationResponseJson.toString(), tenantId, username);
+		// System.out.println("WARNING!!! I AM NOT SENDING RESPONSE MESSAGE ---!!!");
 		return Response.ok("ok", MediaType.APPLICATION_JSON).build();
 		
 	}
@@ -232,6 +270,18 @@ public class RESTService {
 		
         return totalOilResponseJson;
 	}
-	
-	
+
+	private static String[] getUsernameAndTenantId(String queryString) {
+        Pattern pattern = Pattern.compile("username=([^&]+)&tenantId=([^&]+)");
+        Matcher matcher = pattern.matcher(queryString);
+
+        if (matcher.find()) {
+            String username = matcher.group(1); // estrae il valore di username
+            String tenantId = matcher.group(2); // estrae il valore di tenantId
+            return new String[]{username, tenantId};
+        } else {
+            return null; // ritorna null se non trova corrispondenze
+        }
+    }
+
 }

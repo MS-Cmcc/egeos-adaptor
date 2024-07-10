@@ -17,6 +17,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
 
@@ -48,12 +50,18 @@ public class Utils {
 		}
 
 		Feature feature = egeosEvent.getFeatures().get(notNullGeometryIndex);
+		String username = egeosEvent.getUsername();
+		String tenantId = egeosEvent.gettenantId();
 		
-		String simName = feature.getId().replace(".", "_").replace("-", "_");
+		// String simName = feature.getId().replace(".", "_").replace("-", "_");
+		String simName = feature.getId() + "&username=" + username + "&tenantId=" + tenantId;
 
 		DateTime dt = new DateTime(feature.getProperties().getDateTime()).toDateTime(DateTimeZone.UTC);
 		// using current DateTime in case of TEST simulation
-		if (simName.contains("***TEST***")) dt = new DateTime(new Date()).toDateTime(DateTimeZone.UTC);
+		if (simName.contains("***TEST***")) {
+			System.out.println("WARNING!!! I AM FORCING THE DATE TO TODAY!!!");
+			dt = new DateTime(new Date()).toDateTime(DateTimeZone.UTC);
+		}
 		
 		String year = String.format("%02d", dt.getYearOfCentury());
 		String month = String.format("%02d", dt.getMonthOfYear());
@@ -125,6 +133,9 @@ public class Utils {
 			var_03 = prop.getProperty("var_03");
 			var_10 = prop.getProperty("var_10");
 
+			// forcing GOFS model
+			if (model.equals("GLOB")) model = "GOFS";
+
 			if (model.equals("GLOB") || model.equals("GOFS")) var_10 = "10.0";
 			else if (model.equals("MED") || model.equals("BLACKSEA")) var_10 = "2.0";
 			else if (model.equals("SANIFS") || model.equals("DUBAI")) var_10 = "0.4";
@@ -192,8 +203,7 @@ public class Utils {
 		} else {
 			con.setRequestMethod("POST");
 			con.setRequestProperty("Content-Type", "application/json");
-			if (service.equals("response")) con.setRequestProperty("Cookie", token);
-
+			if (service.equals("response")) con.setRequestProperty("Authorization","Bearer "+ token);
 		}
 		con.setRequestProperty("Accept", "application/json");
 		con.setDoOutput(true);
@@ -224,22 +234,30 @@ public class Utils {
 		return responseFromHttpRequest;
 	}
 	
-	public static String sendingResponseToEgeos(String egeosURL, String egeosParameters)
+	public static String sendingResponseToEgeos(String egeosParameters, String username, String tenantId)
 			throws JSONException, UnsupportedEncodingException, IOException {
 		String service = "response";
 		String token = getLoginSession();
 		System.out.println();
 		System.out.println("token ----> " + token);
+		String egeosURL = "https://seonse-demo.egeos-services.it/services/api/cmcc/1/"+tenantId+"/"+username+"/cmcc-publication";
+		System.out.println("Sending result to this url: " + egeosURL);
+
 		return sendingRequest(egeosURL, egeosParameters, token, service);
 
 	}
 
 	protected static String getLoginSession() throws IOException {
-		String loginURL = "https://www.eos-viewer.com/analyst";
-		String username = "okeanos";
-		String password = "password";
+		String loginURL = "https://seonse-demo.egeos-services.it/token";
 
-		String usernamePassword = "username=" + username + "&password=" + password + "";
+		String clientId = "Lw_ayNeObduoR2UBCoce82YFo8Ia";
+		String clientSecret = "asVSh_FuJY0bn0DUWOg0FerYOrEa";
+		String clientIdClientSecret = "THdfYXlOZU9iZHVvUjJVQkNvY2U4MllGbzhJYTphc1ZTaF9GdUpZMGJuMERVV09nMEZlcllPckVh";
+		String username= "cmcc";
+		String password= "_Yw:B_?M#t6cgxV@";
+
+
+		String usernamePassword = "grant_type=password&username=" + username + "&password=" + password + "&scope=openid";
 
 		URL url = new URL(loginURL);
 
@@ -247,13 +265,42 @@ public class Utils {
 		con.setRequestMethod("POST");
 		con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 		con.setRequestProperty("Accept", "application/json");
+		con.setRequestProperty("Authorization", "Basic "+clientIdClientSecret);
 		con.setDoOutput(true);
 
 		try (OutputStream os = con.getOutputStream()) {
 			byte[] input = usernamePassword.getBytes("utf-8");
 			os.write(input, 0, input.length);
 		}
-		return readingCookie(con);
+
+		 // Leggi la risposta
+		 int responseCode = con.getResponseCode();
+		 String accessToken = "";
+		 if (responseCode == HttpURLConnection.HTTP_OK) {
+			 // reading response from the server
+			 BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+			 String inputLine;
+			 StringBuilder response = new StringBuilder();
+			 
+			 while ((inputLine = in.readLine()) != null) {
+				 response.append(inputLine);
+			 }
+			 in.close();
+		 
+			 // Converting and printing response
+			 String responseString = response.toString();
+			 System.out.println("Response: " + responseString);
+		 
+			 // Parsing the resonse for getting the access_token
+			 JSONObject jsonResponse = new JSONObject(responseString);
+			 accessToken = jsonResponse.getString("access_token");
+			 System.out.println("Access Token: " + accessToken);
+		 } else {
+			 // Gestisci gli errori
+			 System.out.println("Response not OK. Response code: " + responseCode);
+		 }
+		
+		 return accessToken;
 	}
 
 	protected static String readingCookie(HttpURLConnection httpConnection) {
@@ -268,7 +315,7 @@ public class Utils {
 		while (hearerFieldsIter.hasNext()) {
 
 			String headerFieldKey = hearerFieldsIter.next();
-
+			System.out.println("headerFieldKeyheaderFieldKeyheaderFieldKey " + headerFieldKey);
 			if ("Set-Cookie".equalsIgnoreCase(headerFieldKey)) {
 
 				List<String> headerFieldValue = headerFields.get(headerFieldKey);
@@ -288,9 +335,10 @@ public class Utils {
 
 				}
 
-			}
+			} else System.out.println("NO NO Set-Cookie");
 
 		}
+		System.out.println("cookieString ->>>>>> " + cookieString);
 		return cookieString;
 	}
 

@@ -8,7 +8,9 @@ public class EgeosEvent {
     public int totalFeatures;
     public ArrayList<Feature> features;
     public Crs crs;
-	
+	public String tenantId;
+	public String username;
+
 	public String getType() {
 		return this.type;
 	}
@@ -41,4 +43,20 @@ public class EgeosEvent {
 		this.crs = crs;
 	}
 	
+	public String gettenantId() {
+		return this.tenantId;
+	}
+
+	public void settenantId(String tenantId) {
+		this.tenantId = tenantId;
+	}
+
+	public String getUsername() {
+		return this.username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
 }
