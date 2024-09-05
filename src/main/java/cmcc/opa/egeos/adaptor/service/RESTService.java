@@ -63,7 +63,7 @@ public class RESTService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response creatingOilSpillSimulationRequest(String message) throws JSONException, UnsupportedEncodingException, IOException {
 		System.out.println("you have received a new e-geos simulation request ---------------------------- ");
-
+		System.out.println(message);
 		//JSONObject jsonObject = new JSONObject(message);
 		//String eventId = jsonObject.get("acquisitionId").toString();
 		//int oilSpillSImulationId = Utils.fromEgeosShapefileToOilSpillSimulationRequest(eventId);
